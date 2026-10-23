@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101613">
+  <meta name="description" content="FIELDWORK: a short, interactive ladder safety experience. Inspect, decide and set up safely.">
+  <title>Ladder Safety — FIELDWORK</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/course.css">
+  <link rel="stylesheet" href="css/inspection.css">
+  <link rel="stylesheet" href="css/media.css">
+  <link rel="stylesheet" href="css/revision.css">
+  <script src="js/sound.js" defer></script>
+  <script src="js/narration-data.js" defer></script>
+  <script src="js/media.js" defer></script>
+  <script src="js/course.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to course</a>
+  <header class="site-header">
+    <a class="brand" href="index.html" title="Course home"><span class="brand-mark" aria-hidden="true">F<span>W</span></span> FIELDWORK<span class="brand-dot" aria-hidden="true">®</span></a>
+    <div class="header-label">PRACTICAL KNOWLEDGE. SAFER WORK.</div>
+    <span class="course-code">SAFETY SERIES <span>/</span> 001</span>
+  </header>
+  <div class="course-shell">
+    <nav class="journey" aria-label="Course stages"><ol id="stage-nav"></ol></nav>
+    <main id="main" tabindex="-1"></main>
+    <section class="audio-bar" id="audio-bar" aria-label="Optional audio">
+      <div class="audio-toolbar">
+        <span class="audio-kicker">AUDIO / OPTIONAL</span>
+        <div class="audio-toggles" role="group" aria-label="Independent audio channels">
+          <button class="sound-control" id="narration-toggle" type="button" aria-pressed="false"><span>Narration</span> <span id="narration-state">OFF</span></button>
+          <button class="sound-control" id="music-toggle" type="button" aria-pressed="false"><span>Music</span> <span id="music-state">OFF</span></button>
+      <button class="sound-control" id="sound-toggle" type="button" aria-pressed="false" aria-describedby="sound-help">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M3 7h4l5-4v14l-5-4H3z"/><path class="sound-wave" d="M15 6q5 4 0 8"/></svg>
+        <span>Effects</span> <span id="sound-state">OFF</span>
+      </button>
+      <span id="sound-help" class="sr-only">Optional interface sounds. Enabled by default; playback starts after interaction. All information is available as text.</span>
+      <span id="sound-status" class="sr-only" role="status"></span>
+        </div>
+        <div class="playback-controls" role="group" aria-label="Narration playback">
+          <button class="text-button" id="narration-pause" disabled>Pause narration</button>
+          <button class="text-button" id="narration-replay" disabled>Replay narration</button>
+        </div>
+      </div>
+      <div class="volume-controls"><label>Narration volume <input id="narration-volume" type="range" min="0" max="100" value="100"></label><label>Music volume <input id="music-volume" type="range" min="0" max="100" value="80"></label></div><button class="text-button" id="music-resume" hidden>Resume audio</button><p id="music-playback-state" role="status">Audio ready — starts after interaction.</p>
+      <details class="narration-reading"><summary>Read narration <span id="narration-title">Welcome</span></summary><p id="narration-copy"></p></details>
+      <p id="media-status" class="media-status" role="status"></p>
+      <audio id="narration-player" preload="none"></audio>
+      <audio id="music-player" preload="none" loop></audio>
+    </section>
+    <footer class="course-footer">
+      <span id="position">01 / 05</span>
+      <div class="progress-wrap"><label for="progress">Course progress <span id="progress-text">0%</span></label><progress id="progress" max="100" value="0">0%</progress></div>
+      <button class="text-button" id="guidance-open" aria-haspopup="dialog">Guidance &amp; controls <span class="arrow" aria-hidden="true"></span></button>
+    </footer>
+  </div>
+  <dialog id="cinematic" class="cinematic" aria-labelledby="cinematic-title">
+    <p class="eyebrow">FIELDWORK / 001 — INSPECT BEFORE YOU CLIMB</p>
+    <h2 id="cinematic-title">THE ULTIMATE<br>WORKPLACE <span>THREAT.</span></h2>
+    <p class="cinematic-reveal">A LADDER.</p>
+    <p class="cinematic-copy">FIELDWORK, by Paddy Ordish. In a world where danger lurks around every corner, one man must confront the ultimate workplace threat: a ladder.</p>
+    <div class="cinematic-controls"><button class="secondary" id="cinematic-skip">Skip intro</button><button class="text-button" id="cinematic-pause">Pause intro</button><button class="text-button" id="cinematic-mute">Mute narration</button><button class="text-button" id="cinematic-music">Music OFF</button></div>
+  </dialog>
+  <dialog id="guidance" aria-labelledby="guidance-title">
+    <button class="dialog-close" id="guidance-close" aria-label="Close guidance">×</button>
+    <p class="eyebrow">FIELD NOTES</p><h2 id="guidance-title">Before you get to work.</h2>
+    <p>Use Tab to move between controls, and Enter or Space to select. The inspection checklist provides the same information and controls as the image inspection markers. Nothing requires dragging or a time limit.</p>
+    <p>Your progress is saved in this browser tab for this session where storage is available. Use the stage navigation to revisit completed work. Restart from the completion screen.</p>
+    <p>This exercise covers four pre-use checks on an extension/leaning ladder. It is not an exhaustive checklist and does not cover stepladder-specific checks. This short awareness experience supports workplace training. It does not establish practical competence or replace task-specific training, manufacturer instructions or your employer’s risk assessment.</p>
+    <h3>HSE source guidance</h3>
+    <ul class="sources"><li><a href="https://www.hse.gov.uk/work-at-height/ladders/how-to-check-ladder-is-safe-before-use.htm" target="_blank" rel="noopener">Pre-use checks (opens in a new tab)</a></li><li><a href="https://www.hse.gov.uk/work-at-height/ladders/when-how-to-use-ladders-safely.htm" target="_blank" rel="noopener">Suitability and competence (opens in a new tab)</a></li><li><a href="https://www.hse.gov.uk/work-at-height/ladders/types-of-ladder.htm" target="_blank" rel="noopener">Using ladders safely (opens in a new tab)</a></li><li><a href="https://www.hse.gov.uk/work-at-height/ladders/where-ladders-should-be-used.htm" target="_blank" rel="noopener">Location and ground conditions (opens in a new tab)</a></li><li><a href="https://www.hse.gov.uk/work-at-height/ladders/securing-ladders-used-for-access.htm" target="_blank" rel="noopener">Securing a ladder (opens in a new tab)</a></li></ul>
+  </dialog>
+  <noscript><p class="noscript">Enable JavaScript to use the interactive course. Safety reference links are available in the project README.</p></noscript>
+</body>
+</html>
