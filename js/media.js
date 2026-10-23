@@ -27,6 +27,55 @@
   let context, gain, urgent = false, reserved = false, effectUntil = 0, effectTimer;
   const id = () => queue[index];
 
+  // Native preload="auto" is only a hint (and is often ignored on mobile Safari).
+  // Fetch original bytes for the current/next hotspot and short correct feedback, then
+  // reuse a local Blob URL with the same single, gesture-started narration player.
+  const narrationCache = new Map();
+  let wanted = [], loading, lastHotspot = 3;
+  const hotspot = n => n >= 3 && n <= 6;
+  const cacheable = n => hotspot(n) || n === 7;
+  const canWarm = location.protocol !== 'file:' && window.fetch && window.AbortController && URL.createObjectURL;
+  function warmNarration(ids) {
+    wanted = narrationOn && !document.hidden ? [...new Set(ids)].filter(n => cacheable(n) && !narrationCache.has(n)) : [];
+    if (loading && !wanted.includes(loading.id)) { loading.cancelled = true; loading.controller.abort(); }
+    pumpNarration();
+  }
+  function pumpNarration() {
+    if (!canWarm || loading || !wanted.length) return;
+    // Protect an active native stream on constrained connections. readyState=4
+    // can be optimistic: wait for its actual buffered range to cover the clip.
+    if (voice.getAttribute('src') && !voice.src.startsWith('blob:') && !voice.paused && !voice.ended && !voice.error &&
+        (!Number.isFinite(voice.duration) || !voice.buffered.length || voice.buffered.end(voice.buffered.length - 1) < voice.duration - .1)) return;
+    const next = wanted[0], controller = new AbortController();
+    const task = loading = { id: next, controller };
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    fetch('assets/audio/' + clips[next].file, { signal: controller.signal, priority: 'low' })
+      .then(response => { if (!response.ok) throw new Error('Narration preload unavailable'); return response.blob(); })
+      .then(blob => {
+        if (controller.signal.aborted || !blob.size || blob.size > 1024 * 1024) return;
+        // Explicit MP3 MIME also supports servers that return application/octet-stream.
+        narrationCache.set(next, URL.createObjectURL(new Blob([blob], { type: 'audio/mpeg' })));
+      })
+      .catch(() => { /* A speculative failure never interrupts the course or current audio. */ })
+      .finally(() => {
+        clearTimeout(timeout);
+        if (loading !== task) return;
+        loading = undefined;
+        if (!task.cancelled) wanted = wanted.filter(n => n !== next);
+        pumpNarration();
+      });
+  }
+  function discardNarration(n) {
+    const url = narrationCache.get(n);
+    if (url) { narrationCache.delete(n); URL.revokeObjectURL(url); }
+  }
+  function warmNextNarration() {
+    if (stage !== 0 && stage !== 1) return;
+    if (id() === 23 || id() === 2) warmNarration([7, lastHotspot, lastHotspot + 1]);
+    else if (hotspot(id())) warmNarration([7, id() + 1]);
+    else if (id() === 7) warmNarration(hotspot(lastHotspot + 1) ? [lastHotspot + 1] : []);
+  }
+
   function updateControls() {
     narrationToggle.setAttribute('aria-pressed', String(narrationOn));
     document.querySelector('#narration-state').textContent = narrationOn ? 'ON' : 'OFF';
@@ -101,11 +150,19 @@
     voice.pause(); active = false; paused = false; duck(); reading(); updateControls();
     const start = () => {
       if (ticket !== generation || !narrationOn || paused || document.hidden) return;
-      voice.src = 'assets/audio/' + clip.file;
+      const buffered = narrationCache.get(clip.id);
+      // A fast learner may beat preloading. Stream immediately rather than waiting
+      // for a whole file, and cancel competing speculative work on a cold hotspot.
+      if (!buffered) warmNarration([]);
+      if (hotspot(clip.id)) lastHotspot = clip.id;
+      const source = buffered || 'assets/audio/' + clip.file;
+      if (voice.getAttribute('src') !== source) voice.src = source;
       voice.dataset.clip = String(clip.id);
-      voice.currentTime = 0;
+      // A newly assigned source starts at zero. Avoid seeking before metadata on Safari.
+      if (voice.readyState > 0) voice.currentTime = 0;
       const promise = voice.play();
       if (promise) promise.catch(error => {
+        if (ticket === generation && error.name === 'NotSupportedError') discardNarration(clip.id);
         if (ticket === generation && error.name !== 'AbortError') failed('Narration could not start. Use Replay to try again.');
       });
     };
@@ -116,9 +173,13 @@
     if (nextKey === key) return; // Repeat clicks do not restart the same performance.
     stop(); queue = ids.filter(n => clips[n]); index = 0; key = nextKey; urgent = !!options.urgent;
     reading(); updateControls();
+    if (options.play === false && stage === 0 && id() === 1) warmNarration([7, lastHotspot]);
+    if (options.play === false && stage === 1 && hotspot(id())) { lastHotspot = id(); warmNarration([7, id(), id() + 1]); }
     if (armed && narrationOn && options.play !== false) playClip(urgent ? 240 : 0);
   }
-  voice.addEventListener('playing', () => { if (!narrationOn || paused || document.hidden) { voice.pause(); return; } active = true; if (status.dataset.channel === 'narration') status.textContent = ''; duck(); updateControls(); });
+  voice.addEventListener('playing', () => { if (!narrationOn || paused || document.hidden) { voice.pause(); return; } active = true; if (status.dataset.channel === 'narration') status.textContent = ''; duck(); updateControls(); warmNextNarration(); });
+  voice.addEventListener('progress', pumpNarration);
+  voice.addEventListener('durationchange', pumpNarration);
   voice.addEventListener('ended', () => {
     const endedId = id(); active = false;
     window.dispatchEvent(new CustomEvent('fieldwork:narration-ended', {detail:{id:endedId}}));
@@ -127,9 +188,9 @@
     if (index + 1 < queue.length && narrationOn) { ++index; playClip(urgent ? 400 : 260); }
     else { paused = true; release(); updateControls(); }
   });
-  voice.addEventListener('error', () => { if (voice.getAttribute('src')) failed('This narration recording is unavailable.'); });
+  voice.addEventListener('error', () => { if (voice.getAttribute('src')) { discardNarration(Number(voice.dataset.clip)); failed('This narration recording is unavailable.'); } });
   narrationToggle.addEventListener('click', () => {
-    if (narrationOn) { narrationOn = false; stop(); status.textContent = 'Narration off.'; }
+    if (narrationOn) { narrationOn = false; warmNarration([]); stop(); status.textContent = 'Narration off.'; }
     else { narrationOn = true; armed = true; status.textContent = ''; playClip(); }
     savePreferences(); updateControls();
   });
@@ -197,14 +258,15 @@
   music.addEventListener('error', () => { if (music.getAttribute('src')) { music.pause(); fadeMusic(.1); updateControls(); musicState(); status.dataset.channel = 'music'; status.textContent = 'Music is unavailable. You can continue without it.'; } });
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) return;
+    warmNarration([]);
     if (active || reserved) { ++generation; clearTimeout(gapTimer); voice.pause(); active = false; paused = true; reserved = false; urgent = false; updateControls(); }
     music.pause(); // Never resume audible content merely because a tab becomes visible.
     ++musicGeneration; clearTimeout(musicStopTimer); fadeMusic(.1); updateControls(); musicState();
   });
-  window.addEventListener('pagehide', () => { narrationOn = false; ++musicGeneration; clearTimeout(musicStopTimer); stop(); music.pause(); });
+  window.addEventListener('pagehide', () => { narrationOn = false; warmNarration([]); ++musicGeneration; clearTimeout(musicStopTimer); stop(); music.pause(); for (const n of narrationCache.keys()) discardNarration(n); });
   window.FieldworkMedia = Object.freeze({
     setContext,
-    setStage(nextStage) { stage = nextStage; fadeMusic(.5); },
+    setStage(nextStage) { stage = nextStage; if (stage !== 0 && stage !== 1) warmNarration([]); fadeMusic(.5); },
     stop,
     effect(cue) {
       if (!window.FieldworkSound?.enabled()) return;
