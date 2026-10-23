@@ -1,0 +1,115 @@
+/* Targeted inspection refinements. Course-wide layouts and typography stay in course.css. */
+.inspection-stage .inspection-visual {
+  --point-x: 42%; --point-y: 42%;
+  isolation: isolate;
+}
+.inspection-stage .inspection-visual[data-active="1"] { --point-x: 55%; --point-y: 60%; }
+.inspection-stage .inspection-visual[data-active="2"] { --point-x: 36%; --point-y: 87%; }
+.inspection-stage .inspection-visual[data-active="3"] { --point-x: 61%; --point-y: 31%; }
+.inspection-stage .inspection-visual::after {
+  content: ''; position: absolute; pointer-events: none; z-index: 0;
+  left: var(--point-x); top: var(--point-y); width: 220px; height: 220px;
+  transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle, #ff681f1a, #ff681f06 42%, transparent 70%);
+  transition: left .32s ease, top .32s ease;
+}
+/* The visible reticle is 18px; the transparent 44px button retains its touch target. */
+.inspection-stage .hotspot {
+  z-index: 2; width: 44px; height: 44px; padding: 0; display: grid; place-items: center;
+  border: 0; border-radius: 5px; background: transparent; color: var(--orange);
+  box-shadow: none; transition: none;
+}
+.inspection-stage .hotspot:hover,
+.inspection-stage .hotspot.active { background: transparent; color: var(--orange); box-shadow: none; }
+.marker-symbol {
+  position: relative; display: grid; place-items: center; width: 18px; height: 18px;
+  border: 1px solid var(--orange); border-radius: 3px; background: #101613;
+  box-shadow: 0 0 14px #ff681f21; transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+}
+.marker-symbol::before {
+  content: ''; width: 4px; height: 4px; background: var(--orange); transform: rotate(45deg);
+}
+.marker-symbol::after {
+  content: ''; position: absolute; inset: -5px; border: 1px solid #ff681f75; border-radius: 5px;
+  animation: marker-pulse 2.2s ease-out 2;
+}
+.hotspot:hover .marker-symbol,
+.hotspot:focus-visible .marker-symbol { transform: scale(1.14); box-shadow: 0 0 18px #ff681f40; }
+.hotspot.active .marker-symbol {
+  background: var(--orange); box-shadow: 0 0 0 4px #ff681f1f, 0 0 24px #ff681f30;
+}
+.hotspot.active .marker-symbol::before { background: var(--ink); }
+.hotspot.complete .marker-symbol::before {
+  width: 7px; height: 4px; background: none; border-left: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor; transform: translateY(-1px) rotate(-45deg);
+}
+.hotspot.active.complete .marker-symbol { color: var(--ink); }
+.hotspot.complete .marker-symbol::after { animation: none; border-style: double; border-color: #ff681f60; }
+.marker-label {
+  pointer-events: none; position: absolute; left: 38px; top: 50%; transform: translate(4px, -50%);
+  width: max-content; max-width: 135px; text-align: left; white-space: normal;
+  padding: 6px 9px; border-left: 1px solid var(--orange); background: #101613f5;
+  font: 10px/1.4 monospace; color: var(--text); opacity: 0; visibility: hidden;
+  transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+}
+.marker-label small { display: block; margin-top: 2px; font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: var(--orange); }
+.hotspot:hover .marker-label,
+.hotspot:focus-visible .marker-label,
+.hotspot.active .marker-label { opacity: 1; visibility: visible; transform: translate(0, -50%); }
+.inspection-stage .check-number { color: #ffad80; }
+.inspection-stage .check-item { transition: background .2s ease, box-shadow .2s ease; }
+.inspection-stage .check-item[aria-pressed="true"] { background: #29352b; box-shadow: inset 2px 0 var(--orange); }
+.inspection-stage .check-item[aria-pressed="true"] .check-state { color: #ffd1b3; }
+.inspection-stage .inspection-detail {
+  margin-top: 22px; padding: 19px 18px; border-left: 2px solid var(--orange);
+  background: linear-gradient(110deg, #ff681f09, #1b251d 75%);
+  box-shadow: 0 9px 24px #00000014;
+}
+.inspection-detail.detail-reveal { animation: detail-reveal .28s ease-out; }
+.inspection-stage .feedback { animation: feedback-settle .3s ease-out; }
+.inspection-stage .inspection-detail .choice.selected { box-shadow: inset 0 0 0 1px var(--orange); }
+.inspection-stage .inspection-detail .choices { margin-bottom: 0; }
+.inspection-stage .inspection-detail .feedback { margin-bottom: 0; }
+@keyframes marker-pulse {
+  0% { transform: scale(.85); opacity: .65; }
+  75%, 100% { transform: scale(1.45); opacity: 0; }
+}
+@keyframes detail-reveal { from { transform: translateY(7px); } to { transform: translateY(0); } }
+@keyframes feedback-settle { from { transform: translateY(4px); box-shadow: 0 0 16px #ff681f12; } to { transform: none; box-shadow: none; } }
+/* A persistent control outside the changing stage DOM. Off at every page load. */
+.sound-control {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: transparent; color: var(--muted); border: 1px solid var(--line);
+  padding: 9px 11px; min-height: 40px; font: 10px/1.5 monospace; flex-shrink: 0;
+}
+.sound-control svg { width: 15px; height: 15px; flex-shrink: 0; }
+.sound-control #sound-state { color: var(--text); min-width: 23px; }
+.sound-control[aria-pressed="true"] { color: #ffb78b; border-color: #ba6a3b; }
+.sound-control:hover:not(:disabled) { border-color: var(--orange); }
+.sound-control[aria-pressed="false"] .sound-wave { display: none; }
+@media(max-width:700px) {
+  .sound-control { gap: 5px; padding: 8px; }
+  .sound-control svg { display: none; }
+  .course-footer .progress-wrap { min-width: 80px; }
+  .inspection-stage .inspection-detail { padding: 18px 12px; }
+  .marker-label { max-width: 115px; font-size: 9px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .inspection-stage *, .inspection-stage *::before, .inspection-stage *::after { animation: none !important; transition: none !important; }
+}
+@media(forced-colors:active) {
+  .inspection-stage .hotspot { border: 0; }
+  .marker-symbol { border-color: ButtonText; background: Canvas; box-shadow: none; }
+  .marker-symbol::before { background: ButtonText; }
+  .hotspot.active .marker-symbol { outline: 2px solid Highlight; background: Canvas; }
+  .hotspot.active .marker-symbol::before { background: ButtonText; }
+  .hotspot.complete .marker-symbol::before { background: none; border-color: ButtonText; }
+  .marker-label { border-color: ButtonText; background: Canvas; color: CanvasText; }
+  .inspection-stage .check-item[aria-pressed="true"] { outline: 1px solid Highlight; }
+  .sound-control { border-color: ButtonText; }
+}
+@media(max-width:700px) {
+  /* Keep the longest point label inside narrow ladder panels. */
+  .hot-lock .marker-label { left: auto; right: 38px; border-left: 0; border-right: 1px solid var(--orange); text-align: right; transform: translate(-4px, -50%); }
+  .hot-lock:hover .marker-label, .hot-lock:focus-visible .marker-label, .hot-lock.active .marker-label { transform: translate(0, -50%); }
+}

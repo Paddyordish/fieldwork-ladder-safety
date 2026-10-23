@@ -1,0 +1,76 @@
+/* Audio production controls, scoped additions to the established FIELDWORK shell. */
+.audio-bar { margin: 0; padding: 21px 4.5%; border-top: 1px solid var(--line); background: #141c17; }
+.audio-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; }
+.audio-kicker { font: 9px/1.5 monospace; letter-spacing: .12em; color: var(--muted); }
+.audio-toggles, .playback-controls { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; }
+.playback-controls { margin-left: auto; gap: 24px; }
+.audio-toggles .sound-control { min-height: 44px; }
+.audio-toggles .sound-control span:last-child { color: var(--text); min-width: 23px; }
+.audio-bar[data-narration="playing"] #narration-toggle { border-color: var(--orange); }
+.narration-reading { border-top: 1px solid #3d474080; padding-top: 12px; margin-top: 15px; max-width: 920px; }
+.narration-reading summary { cursor: pointer; color: var(--muted); font-size: 12px; padding: 4px 0; width: fit-content; }
+.narration-reading summary:focus-visible { outline: 3px solid #ffe298; outline-offset: 5px; }
+#narration-title { color: var(--text); margin-left: 16px; }
+.narration-reading[open] summary { margin-bottom: 13px; }
+#narration-copy { font-size: 14px; max-width: 800px; }
+.narration-reading .small-note { margin-top: 0; margin-bottom: 10px; }
+.media-status { font-size: 12px; color: #ffd1b3; margin-top: 10px; }
+.media-status:empty { display: none; }
+.audio-bar audio { display: none; }
+.cinematic-start { display: block; margin-top: 9px; font-size: 11px; color: var(--text); }
+.cinematic-start .small-note { display: inline; font-size: 9px; color: var(--muted); margin-left: 12px; }
+.cinematic { width: min(960px, calc(100% - 30px)); max-width: 960px; text-align: center; padding: 55px 45px 35px; background: radial-gradient(ellipse at 50% 0, #36412b55, transparent 75%), #101613; }
+.cinematic h2 { font: 600 clamp(42px,7vw,84px)/.98 var(--heading); margin: 22px 0; }
+.cinematic h2 span { color: var(--orange); }
+.cinematic-reveal { font: 600 clamp(45px,7vw,90px)/1 var(--heading); color: var(--orange); margin: 25px 0; animation: cinematic-emphasis 12s ease-out both; }
+.cinematic-copy { font-size: 13px; max-width: 650px; margin: 0 auto 28px; }
+.cinematic-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 25px; border-top: 1px solid var(--line); padding-top: 22px; }
+@keyframes cinematic-emphasis { 0%,60% { transform: scale(.96); } 85%,100% { transform: scale(1); text-shadow: 0 0 35px #ff681f30; } }
+/* Geometry matches tools/render-ladder.py: wider base, narrower fly and paired locks. */
+.inspection-stage .hot-stile { left: 33.75%; top: 60.6%; }
+.inspection-stage .hot-rung { left: 47.61%; top: 74.5%; }
+.inspection-stage .hot-foot { left: 33.75%; top: 89.3%; }
+.inspection-stage .hot-lock { left: 59.2%; top: 61.5%; }
+.inspection-stage .inspection-visual { --point-x: 33.75%; --point-y: 60.6%; }
+.inspection-stage .inspection-visual[data-active="1"] { --point-x: 47.61%; --point-y: 74.5%; }
+.inspection-stage .inspection-visual[data-active="2"] { --point-x: 33.75%; --point-y: 89.3%; }
+.inspection-stage .inspection-visual[data-active="3"] { --point-x: 59.2%; --point-y: 61.5%; }
+@media(max-width:700px) {
+  .audio-bar { padding: 20px 6%; }
+  .audio-toolbar { gap: 12px; }
+  .audio-kicker { width: 100%; }
+  .audio-toggles { width: 100%; flex-wrap: nowrap; gap: 6px; }
+  .audio-toggles .sound-control { padding: 8px; gap: 5px; font-size: 9px; }
+  .playback-controls { margin: 0; gap: 25px; }
+  .narration-reading summary { line-height: 1.7; }
+  #narration-title { display: block; margin-left: 14px; }
+  .cinematic { padding: 35px 22px 25px; }
+  .cinematic-start .small-note { display: block; margin-left: 0; }
+  .cinematic-copy { font-size: 12px; }
+  .cinematic-controls { gap: 8px 18px; }
+}
+
+.cinematic[data-paused="true"] .cinematic-reveal { animation-play-state: paused; }
+
+/* A proportioned image canvas keeps the product and hit targets aligned at any aspect ratio. */
+.inspection-canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 55%; height: 100%; }
+.inspection-canvas > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.inspection-stage .inspection-visual::after { content: none; }
+.inspection-canvas::after {
+  content: ''; position: absolute; pointer-events: none; z-index: 0;
+  left: var(--point-x); top: var(--point-y); width: 220px; height: 220px;
+  transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle, #ff681f1a, #ff681f06 42%, transparent 70%);
+  transition: left .32s ease, top .32s ease;
+}
+/* At this scale the two stile/lock markers sit beside each other. Put their
+   labels above, so a selected label never hides the neighbouring reticle. */
+.hot-stile .marker-label, .hot-lock .marker-label {
+  left: 50%; right: auto; top: auto; bottom: 42px;
+  transform: translate(-50%, 4px); text-align: center;
+  border-left: 0; border-right: 0; border-bottom: 1px solid var(--orange);
+}
+.hot-stile:hover .marker-label, .hot-stile:focus-visible .marker-label, .hot-stile.active .marker-label,
+.hot-lock:hover .marker-label, .hot-lock:focus-visible .marker-label, .hot-lock.active .marker-label {
+  transform: translate(-50%, 0);
+}
