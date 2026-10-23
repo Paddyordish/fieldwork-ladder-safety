@@ -107,6 +107,7 @@
     syncChrome();
     main.innerHTML = [intro,inspection,decision,setup,completion][state.stage]() + (storageFailed ? '<p class="storage-note" role="status">Session saving is unavailable. Progress will be kept until you reload or close this page.</p>' : '');
     fitInspection();
+    window.FieldworkImages?.prepare(state.stage, state.active);
     document.title = `${labels[state.stage]} — Ladder Safety — FIELDWORK`;
   }
   // Keep the ladder and button nodes stable while updating just the inspection UI.
@@ -141,6 +142,7 @@
     main.querySelector('#verdict-feedback').innerHTML = next.querySelector('#verdict-feedback').innerHTML;
     main.querySelector('[data-action="next"]').disabled = state.inspected.length < 4 || state.verdict !== 1;
     syncChrome();
+    window.FieldworkImages?.prepare(state.stage, state.active);
   }
   const narrate = (ids, options) => window.FieldworkMedia?.setContext(ids, options);
   function narrateStage(play = true) {
@@ -154,7 +156,7 @@
     if (b.dataset.stage !== undefined) return go(Number(b.dataset.stage));
     if (b.hasAttribute('data-back')) return go(state.stage-1);
     if (b.dataset.action === 'next') return next();
-    if (b.dataset.action === 'begin') { if (cinematic.open) return; cinematic.showModal(); cinematicElapsed = 0; cinematicPaused = false; cinematicLast = performance.now(); window.FieldworkMedia?.cinematic(); requestAnimationFrame(cinematicFrame); return; }
+    if (b.dataset.action === 'begin') { if (cinematic.open) return; window.FieldworkImages?.prepare(1, state.active); cinematic.showModal(); cinematicElapsed = 0; cinematicPaused = false; cinematicLast = performance.now(); window.FieldworkMedia?.cinematic(); requestAnimationFrame(cinematicFrame); return; }
     if (b.dataset.action === 'restart') { state = fresh(); save(); go(0); return; }
     if (b.dataset.point !== undefined) {
       if (!available(Number(b.dataset.point))) return;
